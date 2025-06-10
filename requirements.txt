@@ -4,24 +4,24 @@
 
 # --- Core AI / ML Libraries ---
 openai-whisper==20231117          # For speech transcription
-torch==2.2.0                      # PyTorch (check compatibility with CUDA if GPU is used)
-torchaudio==2.2.0                 # For audio processing with PyTorch
-torchvision==0.17.0               # For vision models with PyTorch
+torch>=2.2.0,<3.0.0               # PyTorch (check compatibility with CUDA if GPU is used)
+torchaudio~=2.2.0                 # For audio processing with PyTorch
+torchvision~=0.17.0               # For vision models with PyTorch
 
 # For YOLO object detection (Ultralytics is a common choice for recent YOLO versions)
-ultralytics==8.0.190
+ultralytics~=8.0.190
 
 # For BLIP image captioning and other transformer-based models
-transformers==4.35.2              # Hugging Face Transformers
+transformers~=4.50.2              # Hugging Face Transformers
 # timm==0.9.12                    # Often a dependency for vision transformers, may be pulled by transformers
 
 # --- Video and Audio Processing ---
-opencv-python-headless==4.9.0.80  # OpenCV for video frame extraction (headless is good for CLI/servers)
+opencv-python-headless~=4.9.0.80  # OpenCV for video frame extraction (headless is good for CLI/servers)
 # ffmpeg-python==0.2.0            # If using ffmpeg directly via this wrapper for audio extraction
-moviepy==1.0.3                  # Alternative for video/audio operations, might pull ffmpeg itself
+moviepy~=1.0.3                    # Alternative for video/audio operations, might pull ffmpeg itself
 
 # --- Ollama Client ---
-ollama==0.1.8                     # Official Ollama Python client
+ollama~=0.1.8                     # Official Ollama Python client
 
 # --- PANNs Audio Event Detection Dependencies (Example) ---
 # These might vary based on the specific PANNs implementation used.
@@ -37,5 +37,5 @@ ollama==0.1.8                     # Official Ollama Python client
 # --- Ensure specific versions for reproducibility ---
 # Add any other specific libraries identified during development below.
 # For example, if a specific version of numpy or Pillow is crucial:
-numpy==1.26.4
-Pillow==10.1.0
+numpy~=1.26.4
+Pillow~=10.3.0
