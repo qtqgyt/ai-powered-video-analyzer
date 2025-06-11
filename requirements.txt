@@ -9,7 +9,7 @@ torchaudio==2.2.0                 # For audio processing with PyTorch
 torchvision==0.17.0               # For vision models with PyTorch
 
 # For YOLO object detection (Ultralytics is a common choice for recent YOLO versions)
-ultralytics==8.0.190
+ultralytics~=8.0.190
 
 # For BLIP image captioning and other transformer-based models
 transformers==4.35.2              # Hugging Face Transformers

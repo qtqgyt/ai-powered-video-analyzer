@@ -22,3 +22,6 @@ var/
 
 # PyInstaller
 launch.json
+
+# Model Data
+yolo*.pt
