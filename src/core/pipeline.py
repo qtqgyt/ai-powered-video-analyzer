@@ -1,5 +1,7 @@
 # src/core/pipeline.py
 import logging
+
+from ai_models.yolo_detector import YOLODetector
 from .video_utils import extract_audio, extract_frames_for_analysis # etc.
 from src.ai_models.whisper_transcriber import WhisperTranscriber
 #from src.ai_models.yolo_detector import YOLODetector
@@ -33,8 +35,8 @@ class VideoAnalysisPipeline:
         # Model paths should ideally come from settings.py
         if self.perform_transcription:
             self.transcriber = WhisperTranscriber(model_path=settings.WHISPER_MODEL_PATH)
-        # if self.perform_object_detection:
-        #     self.object_detector = YOLODetector(model_path=settings.YOLO_MODEL_PATH)
+        if self.perform_object_detection:
+            self.object_detector = YOLODetector(model_path=settings.YOLO_MODEL_PATH)
         # if self.perform_scene_description:
         #     self.captioner = BLIPCaptioner(model_path=settings.BLIP_MODEL_PATH)
         # if self.perform_audio_events:
@@ -46,13 +48,11 @@ class VideoAnalysisPipeline:
         logger.info(f"Pipeline started for {self.video_path}")
         results = {}
 
-        # 1. Extract Audio
-            
+        # 1. Extract Audio            
         audio_path = extract_audio(self.video_path) # This function needs to be implemented
         if not audio_path:
-            raise NotImplementedError("This is not yet implemented.")
             logger.error("Failed to extract audio.")
-            # return or raise appropriate error
+            return results
 
         # 2. Speech Transcription (Whisper)
         if self.perform_transcription and hasattr(self, 'transcriber'):
@@ -67,23 +67,33 @@ class VideoAnalysisPipeline:
     #         results["audio_events"] = self.audio_event_detector.detect_events(audio_path)
     #         logger.debug(f"Audio Events: {results['audio_events']}")
 
-    #     # 4. Frame Extraction (for YOLO & BLIP)
+        # 4. Frame Extraction (for YOLO & BLIP)
     #     # This needs careful implementation: select keyframes or process at intervals
     #     raise NotImplementedError("This is not yet implemented.")
-    #     logger.info("Extracting frames for visual analysis...")
-    #     frames_for_analysis = extract_frames_for_analysis(self.video_path, interval_seconds=5) # Example
+        logger.info("Extracting frames for visual analysis...")
+        frames_for_analysis = extract_frames_for_analysis(self.video_path, interval_seconds=5) # Example
 
-    #     # 5. Object Detection (YOLO)
-    #     if self.perform_object_detection and hasattr(self, 'object_detector') and frames_for_analysis:
+        # 5. Object Detection (YOLO)
+        if self.perform_object_detection and hasattr(self, 'object_detector') and frames_for_analysis:
     #         raise NotImplementedError("This is not yet implemented.")
-    #         logger.info("Detecting objects in frames...")
-    #         all_objects = []
-    #         for timestamp, frame_image in frames_for_analysis:
-    #             objects = self.object_detector.detect(frame_image)
-    #             if objects:
-    #                 all_objects.append({"timestamp": timestamp, "objects": objects})
-    #         results["object_detections"] = all_objects
-    #         logger.debug(f"Object Detections (sample): {all_objects[:2]}")
+            logger.info("Detecting objects in frames...")
+            all_objects = []
+            for frame in frames_for_analysis:
+                objects = self.object_detector.detect(frame.image)
+                if objects:
+                    all_objects.append({
+                        "timestamp": frame.timestamp,
+                        "objects": objects
+                    })
+            
+            # Calculate statistics across all frames
+            if all_objects:
+                results["object_detections"] = all_objects
+                total_objects = sum(len(frame["objects"]) for frame in all_objects)
+                unique_objects = len({obj["class_name"] for frame in all_objects for obj in frame["objects"]})
+                logger.info(f"Object Detection: Found {total_objects} instances of {unique_objects} unique object types")
+            else:
+                logger.debug("Object Detection: No objects detected")
 
     #     # 6. Scene Description (BLIP)
     #     if self.perform_scene_description and hasattr(self, 'captioner') and frames_for_analysis:
@@ -124,9 +134,50 @@ class VideoAnalysisPipeline:
     def _generate_text_report(self, analysis_results):
         # Format all collected results into a comprehensive string
         report_parts = [f"Analysis Report for: {self.video_path}\n{'='*40}\n"]
+        
+        # AI Summary section
         if analysis_results.get("summary"):
             report_parts.append(f"AI Summary:\n{analysis_results['summary']}\n{'-'*40}\n")
+        
+        # Transcription section
         if analysis_results.get("transcription"):
             report_parts.append(f"Full Transcription:\n{analysis_results['transcription']}\n{'-'*40}\n")
-        # ... add other sections (objects, scenes, audio events)
+        
+        # Object Detection section
+        if analysis_results.get("object_detections"):
+            report_parts.append("Object Detection Summary:\n")
+            
+            # Collect all objects and their confidences
+            all_detected_objects = {}
+            for detection in analysis_results["object_detections"]:
+                for obj in detection["objects"]:
+                    name = obj["class_name"]
+                    conf = obj["confidence"]
+                    if name not in all_detected_objects:
+                        all_detected_objects[name] = []
+                    all_detected_objects[name].append(conf)
+            
+            # Sort by frequency and get top 5
+            top_objects = sorted(
+                all_detected_objects.items(), 
+                key=lambda x: len(x[1]), 
+                reverse=True
+            )[:5]
+            
+            # Calculate statistics for each object type
+            report_parts.append("\nTop 5 detected objects:\n")
+            for obj_name, confidences in top_objects:
+                count = len(confidences)
+                mean_conf = sum(confidences) / count
+                median_conf = sorted(confidences)[len(confidences)//2]
+                skew = abs(mean_conf - median_conf)
+                
+                report_parts.append(
+                    f"  - {obj_name}: {count} occurrences\n"
+                    f"    Confidence: mean={mean_conf:.1%}, median={median_conf:.1%}"
+                    f"{' (high variance)' if skew > 0.1 else ''}\n"
+                )
+            
+            report_parts.append(f"\n{'-'*40}\n")
+        
         return "".join(report_parts)

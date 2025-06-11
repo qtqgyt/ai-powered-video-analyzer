@@ -19,3 +19,7 @@ DEFAULT_OLLAMA_MODEL = os.getenv("DEFAULT_OLLAMA_MODEL", "llama2") # Example, ch
 # --- Other Settings ---
 DEFAULT_TRANSCRIPTION_LANGUAGE = "en"
 VIDEO_FRAME_EXTRACTION_INTERVAL = 5 # seconds
+
+# YOLO settings
+YOLO_MODEL_PATH = "yolov8x.pt"  # Use small model by default
+FRAME_INTERVAL_SECONDS = 5  # Extract frame every 5 seconds
