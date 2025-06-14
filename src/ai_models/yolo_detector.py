@@ -3,15 +3,28 @@ from pathlib import Path
 from typing import List, Dict, Any
 import torch
 from ultralytics import YOLO
+from ultralytics.nn.tasks import DetectionModel
 import numpy as np
 
 logger = logging.getLogger(__name__)
+
+# Patch torch.load globally to force weights_only=False and allow DetectionModel
+_original_torch_load = torch.load
+
+def patched_torch_load(f, *args, **kwargs):
+    if 'weights_only' not in kwargs:
+        kwargs['weights_only'] = False
+    with torch.serialization.safe_globals([DetectionModel]):
+        return _original_torch_load(f, *args, **kwargs)
+
+torch.load = patched_torch_load
+
 
 class YOLODetector:
     def __init__(self, model_path: str = "yolov8n.pt"):
         """
         Initialize YOLO detector with specified model.
-        
+
         Args:
             model_path (str): Path to YOLO model or model name
         """
@@ -32,10 +45,10 @@ class YOLODetector:
     def detect(self, frame: np.ndarray) -> List[Dict[str, Any]]:
         """
         Detect objects in a frame
-        
+
         Args:
             frame (np.ndarray): Input frame
-            
+
         Returns:
             List[Dict[str, Any]]: List of detections with coordinates and labels
         """
