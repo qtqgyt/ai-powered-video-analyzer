@@ -3,13 +3,13 @@
 # It's good practice to note when it was last updated or generated.
 
 # --- Core AI / ML Libraries ---
-openai-whisper==20231117          # For speech transcription
+openai-whisper==20240930          # For speech transcription
 torch>=2.2.0,<3.0.0               # PyTorch (check compatibility with CUDA if GPU is used)
 torchaudio~=2.2.0                 # For audio processing with PyTorch
 torchvision~=0.17.0               # For vision models with PyTorch
 
 # For YOLO object detection (Ultralytics is a common choice for recent YOLO versions)
-ultralytics~=8.0.190
+ultralytics~=8.3.153
 
 # For BLIP image captioning and other transformer-based models
 transformers~=4.50.2              # Hugging Face Transformers
