@@ -7,6 +7,7 @@ from src.utils.file_system import ensure_dir_exists
 logger = logging.getLogger(__name__)
 
 def handle_video_analysis(args):
+    """Handle the video analysis command."""
     logger.info(f"Starting analysis for video: {args.video}")
 
     if not os.path.exists(args.video):
@@ -23,11 +24,12 @@ def handle_video_analysis(args):
     pipeline = VideoAnalysisPipeline(
         video_path=args.video,
         transcription_language=args.transcription_language,
-        summarization_model_name=args.summarization_model,
-        # Pass flags for skipping analyses
+        summarization_model="gemma3", 
         perform_object_detection=not args.skip_object_detection,
         perform_scene_description=not args.skip_scene_description,
-        # ... and so on
+        perform_transcription=True,
+        perform_audio_events=True,
+        perform_summarization=True
     )
 
     # Run the analysis

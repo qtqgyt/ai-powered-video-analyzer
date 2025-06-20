@@ -9,10 +9,20 @@ This project is based on the original work by [Arash Sajjadi](https://github.com
 ## Features
 
 - Speech transcription using OpenAI's Whisper
-- Object detection (planned)
+- Object detection 
 - Scene description (planned)
 - Audio event detection (planned)
-- Content summarization (planned)
+- Content summarization
+
+## Prerequisites
+
+Before running the video analyzer, ensure:
+
+1. Ollama is installed and running:
+2. The Ollama service is running at http://localhost:11434
+3. Required models are downloaded:
+   - gemma3 (default summarization model)
+   - YOLOv8 (object detection)
 
 ## Installation
 
