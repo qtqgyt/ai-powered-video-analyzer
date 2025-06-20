@@ -1,9 +1,11 @@
 # src/core/pipeline.py
 import logging
+from typing import Optional
 
 from ai_models.yolo_detector import YOLODetector
 from .video_utils import extract_audio, extract_frames_for_analysis # etc.
 from src.ai_models.whisper_transcriber import WhisperTranscriber
+from src.ai_models.ollama_summarizer import OllamaSummarizer
 #from src.ai_models.yolo_detector import YOLODetector
 #from src.ai_models.blip_captioner import BLIPCaptioner
 #from src.ai_models.pann_audio_event_detector import PANNAudioEventDetector
@@ -16,14 +18,14 @@ from pathlib import Path
 logger = logging.getLogger(__name__)
 
 class VideoAnalysisPipeline:
-    def __init__(self, video_path, transcription_language="en", summarization_model_name=None,
+    def __init__(self, video_path, transcription_language="en", summarization_model="gemma3",
                  perform_object_detection=True, perform_scene_description=True,
                  perform_transcription=True, perform_audio_events=True, perform_summarization=True):
         # Convert video_path to Path object and resolve it
         self.video_path = str(Path(video_path).resolve())
 
         self.transcription_language = transcription_language
-        self.summarization_model_name = summarization_model_name
+        self.summarization_model_name = summarization_model
 
         self.perform_object_detection = perform_object_detection
         self.perform_scene_description = perform_scene_description
@@ -41,8 +43,7 @@ class VideoAnalysisPipeline:
         #     self.captioner = BLIPCaptioner(model_path=settings.BLIP_MODEL_PATH)
         # if self.perform_audio_events:
         #     self.audio_event_detector = PANNAudioEventDetector(model_path=settings.PANNS_MODEL_PATH)
-        # if self.perform_summarization:
-        #     self.summarizer = LLMSummarizer(model_name=self.summarization_model_name or settings.DEFAULT_OLLAMA_MODEL)
+        self.summarizer = OllamaSummarizer(model_name=summarization_model)
 
     def run_analysis(self):
         logger.info(f"Pipeline started for {self.video_path}")
@@ -107,14 +108,27 @@ class VideoAnalysisPipeline:
     #         results["scene_descriptions"] = all_captions
     #         logger.debug(f"Scene Descriptions (sample): {all_captions[:2]}")
 
-    #     # 7. AI Summarization (LLM via Ollama)
-    #     if self.perform_summarization and hasattr(self, 'summarizer'):
-    #         raise NotImplementedError("This is not yet implemented.")
-    #         logger.info("Generating AI summary...")
-    #         # Compile context for the summarizer
-    #         summary_context = self._prepare_summary_context(results)
-    #         results["summary"] = self.summarizer.summarize(summary_context)
-    #         logger.debug(f"Summary: {results['summary']}")
+        # 7. AI Summarization (LLM via Ollama)
+        if self.perform_summarization and hasattr(self, 'summarizer'):
+            try:
+                logger.info("Generating AI summary...")
+                # Prepare context from available results
+                summary_context = self._prepare_summary_context(results)
+                
+                if not summary_context:
+                    logger.warning("No content available for summarization")
+                    results["summary"] = "Insufficient content for video summary."
+                else:
+                    # Get summary from Ollama
+                    results["summary"] = self.summarizer.summarize(summary_context)
+                    if results["summary"]:
+                        logger.debug(f"Generated summary ({len(results['summary'])} chars)")
+                    else:
+                        logger.error("Failed to generate summary")
+                        results["summary"] = "Summary generation failed."
+            except Exception as e:
+                logger.error(f"Error during summarization: {e}")
+                results["summary"] = f"Error generating summary: {str(e)}"
 
         # 8. (Optional) Create Annotated Video & Final Report String
         # This would involve more complex logic in output_generator.py
@@ -123,13 +137,31 @@ class VideoAnalysisPipeline:
         logger.info("Pipeline finished.")
         return results
 
-    # def _prepare_summary_context(self, analysis_results):
-    #     # Combine transcription, object list, scene descriptions into a prompt
-    #     context_parts = []
-    #     if analysis_results.get("transcription"):
-    #         context_parts.append(f"Transcription:\n{analysis_results['transcription']}\n")
-    #     # Add more logic to format object detections and scene descriptions
-    #     return "\n".join(context_parts)
+    def _prepare_summary_context(self, analysis_results):
+        """Prepare a context string for the summarizer from all available analysis results."""
+        context_parts = []
+        
+        # Add transcription if available
+        if analysis_results.get("transcription"):
+            context_parts.append(f"Speech Content:\n{analysis_results['transcription']}\n")
+        
+        # Add object detection summary if available
+        if analysis_results.get("object_detections"):
+            # Group objects by type for a cleaner summary
+            object_counts = {}
+            for frame in analysis_results["object_detections"]:
+                for obj in frame["objects"]:
+                    name = obj["class_name"]
+                    object_counts[name] = object_counts.get(name, 0) + 1
+            
+            # Format object detection summary
+            if object_counts:
+                context_parts.append("Visual Elements Detected:")
+                for obj_name, count in sorted(object_counts.items(), key=lambda x: x[1], reverse=True):
+                    context_parts.append(f"- {obj_name}: {count} occurrences")
+        
+        # Combine all parts with proper spacing
+        return "\n\n".join(context_parts)
 
     def _generate_text_report(self, analysis_results):
         # Format all collected results into a comprehensive string
@@ -181,3 +213,26 @@ class VideoAnalysisPipeline:
             report_parts.append(f"\n{'-'*40}\n")
         
         return "".join(report_parts)
+
+    def generate_summary(self, report_path: str) -> Optional[str]:
+        """Generate a summary of the video analysis report."""
+        if not self.perform_summarization:
+            logger.debug("Summarization not enabled")
+            return None
+            
+        logger.info("Generating video summary...")
+        summary = self.summarizer.summarize_report(report_path)
+        
+        if summary:
+            # Save summary to file
+            summary_path = Path(report_path).parent / "video_description.txt"
+            try:
+                with open(summary_path, "w", encoding="utf-8") as f:
+                    f.write("Video Narrative Summary:\n")
+                    f.write(summary)
+                logger.info(f"Summary saved to: {summary_path}")
+                return str(summary_path)
+            except Exception as e:
+                logger.error(f"Failed to save summary: {e}")
+                
+        return None

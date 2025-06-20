@@ -1,0 +1,9 @@
+name: default
+min_words: 50
+max_words: 200
+prompt: |
+  You are an expert video content summarizer. Generate a cohesive, engaging, and concise narrative summary 
+  (between {min_words} and {max_words} words) of the video based on the following report.  If detected
+  objects are strongly correlated to the audio caption contnent, include them in the summary. 
+  Do not include timestamps, technical details, or model names—write in plain, natural language.
+  Do not preface your answer.  Give me just the summary text.  Here is the report:
