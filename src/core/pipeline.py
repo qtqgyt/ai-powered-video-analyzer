@@ -34,7 +34,6 @@ class VideoAnalysisPipeline:
         self.perform_summarization = perform_summarization
 
         # Initialize models (consider lazy loading or explicit setup method)
-        # Model paths should ideally come from settings.py
         if self.perform_transcription:
             self.transcriber = WhisperTranscriber(model_path=settings.WHISPER_MODEL_PATH)
         if self.perform_object_detection:
@@ -50,7 +49,7 @@ class VideoAnalysisPipeline:
         results = {}
 
         # 1. Extract Audio            
-        audio_path = extract_audio(self.video_path) # This function needs to be implemented
+        audio_path = extract_audio(self.video_path) 
         if not audio_path:
             logger.error("Failed to extract audio.")
             return results
@@ -72,11 +71,10 @@ class VideoAnalysisPipeline:
     #     # This needs careful implementation: select keyframes or process at intervals
     #     raise NotImplementedError("This is not yet implemented.")
         logger.info("Extracting frames for visual analysis...")
-        frames_for_analysis = extract_frames_for_analysis(self.video_path, interval_seconds=5) # Example
+        frames_for_analysis = extract_frames_for_analysis(self.video_path, interval_seconds=5)
 
         # 5. Object Detection (YOLO)
         if self.perform_object_detection and hasattr(self, 'object_detector') and frames_for_analysis:
-    #         raise NotImplementedError("This is not yet implemented.")
             logger.info("Detecting objects in frames...")
             all_objects = []
             for frame in frames_for_analysis:
@@ -112,14 +110,12 @@ class VideoAnalysisPipeline:
         if self.perform_summarization and hasattr(self, 'summarizer'):
             try:
                 logger.info("Generating AI summary...")
-                # Prepare context from available results
                 summary_context = self._prepare_summary_context(results)
                 
                 if not summary_context:
                     logger.warning("No content available for summarization")
                     results["summary"] = "Insufficient content for video summary."
                 else:
-                    # Get summary from Ollama
                     results["summary"] = self.summarizer.summarize(summary_context)
                     if results["summary"]:
                         logger.debug(f"Generated summary ({len(results['summary'])} chars)")

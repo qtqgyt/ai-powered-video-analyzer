@@ -10,7 +10,8 @@ import re
 # External Libraries
 import ollama
 from ollama import Client, ResponseError
-# Local Imports (These should generally be grouped together at the end)
+
+# Local Imports 
 from src.config import settings
 
 logger = logging.getLogger(__name__)
@@ -25,11 +26,11 @@ class OllamaSummarizer:
         
         if not self._ensure_ollama_running():
             logger.critical(
-                f"Ollama service is not accessible at {self.host}:{self.port}. "
+                f"Ollama service is not accessible at {settings.OLLAMA_HOST}. "
                 "Please ensure Ollama is running and accessible (e.g., check firewall, service status)."
             )
             raise ConnectionError(
-                f"Cannot connect to Ollama service at {self.host}:{self.port}. "
+                f"Cannot connect to Ollama service at {settings.OLLAMA_HOST}. "
                 "The requested service provider could not be loaded or initialized, "
                 "or Ollama is not running. Check Ollama server logs for more details."
             )
@@ -37,7 +38,7 @@ class OllamaSummarizer:
         if not self._is_model_available(self.model_name):
             error_msg = (
                 f"The requested Ollama model '{self.model_name}' is not available on the server at "
-                f"{self.host}:{self.port}. Please ensure the model is pulled using 'ollama pull {self.model_name}' "
+                f"{settings.OLLAMA_HOST}. Please ensure the model is pulled using 'ollama pull {self.model_name}' "
                 "on the server machine, or check the model name."
             )
             logger.error(error_msg)
@@ -49,7 +50,7 @@ class OllamaSummarizer:
         parsed = urlparse(settings.OLLAMA_HOST)
         self.host = parsed.hostname or "127.0.0.1"
         self.port = parsed.port or 11434
-        logger.debug(f"Using Ollama service at {self.host}:{self.port}")
+        logger.debug(f"Using Ollama service at {settings.OLLAMA_HOST}")
 
     def _ensure_ollama_running(self) -> bool:
         """
@@ -57,16 +58,12 @@ class OllamaSummarizer:
         This uses a direct socket connection check as a pre-flight,
         which is still valuable for diagnosing the "socket provider" error.
         """
-        logger.info(f"Checking Ollama service availability at {self.host}:{self.port}...")
+        logger.info(f"Checking Ollama service availability at {settings.OLLAMA_HOST}...")
         max_retries = 5
         retry_delay = 2 # seconds
         for i in range(max_retries):
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                try:
-                    s.settimeout(1) # Short timeout for connection attempt
-                    s.connect((self.host, self.port))
-                    logger.info("Ollama service is reachable via socket.")
-                    
+                try:                    
                     # Try a simple API call to confirm it's healthy
                     try:
                         self.client.list() # Attempt to list models as a more robust health check
@@ -79,12 +76,12 @@ class OllamaSummarizer:
 
                 except ConnectionRefusedError:
                     logger.warning(
-                        f"Connection refused by Ollama at {self.host}:{self.port}. "
+                        f"Connection refused by Ollama at {settings.OLLAMA_HOST}. "
                         f"Is Ollama running? Retrying in {retry_delay} seconds... ({i+1}/{max_retries})"
                     )
                 except socket.timeout:
                     logger.warning(
-                        f"Timeout connecting to Ollama at {self.host}:{self.port}. "
+                        f"Timeout connecting to Ollama at {settings.OLLAMA_HOST}. "
                         f"Is Ollama running and listening? Retrying in {retry_delay} seconds... ({i+1}/{max_retries})"
                     )
                 except socket.error as e:
@@ -126,7 +123,7 @@ class OllamaSummarizer:
         """Call Ollama using the specified model via HTTP API."""
         try:
             combined = f"{prompt}\n\n{input_text}"
-            logger.debug(f"Calling Ollama at {self.host}:{self.port} with model {self.model_name}")
+            logger.debug(f"Calling Ollama at {settings.OLLAMA_HOST} with model {self.model_name}")
             
             response = self.client.chat(
                 model=self.model_name,

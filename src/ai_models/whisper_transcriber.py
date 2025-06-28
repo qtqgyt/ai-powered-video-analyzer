@@ -1,9 +1,7 @@
 import logging
 from pathlib import Path
-import tempfile
-import shutil
-import os
 
+# External Libraries
 import whisper, whisper.audio
 
 logger = logging.getLogger(__name__)
@@ -21,7 +19,6 @@ class WhisperTranscriber:
             logger.info("Whisper model loaded successfully.")
         except Exception as e:
             logger.error(f"Failed to load Whisper model '{self.model_name}': {e}")
-            # You might want to raise a custom exception or handle this gracefully
             raise
 
     def transcribe(self, audio_path: str, language: str = None) -> str:
@@ -34,7 +31,6 @@ class WhisperTranscriber:
             # Convert to Path object and resolve it
             audio_file = Path(audio_path).resolve()
             
-            # Add detailed debug logging
             logger.debug("=== Whisper Audio File Debug Info ===")
             logger.debug(f"Input path: {audio_path}")
             logger.debug(f"Resolved path: {audio_file}")
@@ -51,12 +47,8 @@ class WhisperTranscriber:
             if language:
                 options["language"] = language
 
-            # Use the string version for whisper functions
             audio = whisper.audio.load_audio(audio_path_str)
             logger.debug(f"Audio loaded successfully, shape: {audio.shape}")
-
-
-            # Use the string version for transcribe
             logger.debug("Starting transcription...")
             result = self.model.transcribe(audio_path_str, **options)
             if result is None:
@@ -69,7 +61,3 @@ class WhisperTranscriber:
             logger.error(f"Exception type: {type(e)}")
             logger.error("Exception details:", exc_info=True)
             return f"Error during transcription: {e}"
-
-# Similar handler classes would be created for YOLO, BLIP, PANNs, and the LLM.
-# Each would load its specific model and provide a clean interface.
-# For example, llm_summarizer.py would interface with Ollama.
