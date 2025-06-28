@@ -24,13 +24,8 @@ def extract_audio(video_path):
         video_path = Path(video_path).resolve()
         audio_path = video_path.with_suffix('.wav')
         
-        # Load the video using properly quoted path
         video = VideoFileClip(str(video_path))
-        
-        # Extract audio and save
         video.audio.write_audiofile(str(audio_path))
-        
-        # Close the video to free resources
         video.close()
         
         logger.info(f"Successfully extracted audio to {audio_path}")
@@ -66,7 +61,6 @@ def extract_frames_for_analysis(video_path: str, interval_seconds: float = None)
         List[Frame]: List of Frame objects containing timestamps and images
     """
     try:
-        # Use settings value if no override provided
         interval = interval_seconds or settings.VIDEO_FRAME_EXTRACTION_INTERVAL
         
         video_path = Path(video_path).resolve()

@@ -1,9 +1,11 @@
 import logging
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import Any, Dict, List
+
+# External Libraries
+import numpy as np
 import torch
 from ultralytics import YOLO
-import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +47,7 @@ class YOLODetector:
 
             for box in results.boxes:
                 detection = {
-                    "bbox": box.xyxy[0].cpu().numpy(),  # Convert to numpy array
+                    "bbox": box.xyxy[0].cpu().numpy(),  # bounding box
                     "confidence": float(box.conf),
                     "class_id": int(box.cls),
                     "class_name": results.names[int(box.cls)]
