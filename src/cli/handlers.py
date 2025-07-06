@@ -1,10 +1,8 @@
-import logging
 import os
+from loguru import logger
 from src.core.pipeline import VideoAnalysisPipeline
 #from src.core.video_utils import get_video_metadata # Example utility
 from src.utils.file_system import ensure_dir_exists
-
-logger = logging.getLogger(__name__)
 
 def handle_video_analysis(args):
     """Handle the video analysis command."""

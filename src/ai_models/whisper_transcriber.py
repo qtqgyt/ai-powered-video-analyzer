@@ -1,10 +1,8 @@
-import logging
 from pathlib import Path
+from loguru import logger
 
 # External Libraries
 import whisper, whisper.audio
-
-logger = logging.getLogger(__name__)
 
 class WhisperTranscriber:
     def __init__(self, model_path: str = "base"): # model_path can be size like "base", "small", etc.

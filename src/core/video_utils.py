@@ -1,4 +1,3 @@
-import logging
 from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Dict, Any
@@ -6,8 +5,7 @@ import cv2
 import numpy as np
 from moviepy.editor import VideoFileClip
 from src.config import settings
-
-logger = logging.getLogger(__name__)
+from loguru import logger
 
 def extract_audio(video_path):
     """

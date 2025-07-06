@@ -1,9 +1,7 @@
 import os
-import logging
 import yaml
 from pathlib import Path
-
-logger = logging.getLogger(__name__)
+from loguru import logger
 
 
 class SummarizerPrompt:

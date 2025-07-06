@@ -1,13 +1,12 @@
-import logging
 from src.cli.arguments import parse_arguments
 from src.cli.handlers import handle_video_analysis
 from src.utils.logging_setup import setup_logging
 from src.config import settings # To potentially load and display some configs
+from loguru import logger
 
 def main():
     args = parse_arguments()
-    setup_logging(level=logging.DEBUG if args.verbose else logging.INFO)
-    logger = logging.getLogger(__name__)
+    setup_logging(level="DEBUG" if args.verbose else "INFO")
 
     logger.info("AI Powered Video Analyzer - CLI Mode")
     logger.debug(f"Arguments: {args}")

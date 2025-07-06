@@ -1,13 +1,11 @@
-import logging
 from pathlib import Path
 from typing import Any, Dict, List
+from loguru import logger
 
 # External Libraries
 import numpy as np
 import torch
 from ultralytics import YOLO
-
-logger = logging.getLogger(__name__)
 
 class YOLODetector:
     def __init__(self, model_path: str = "yolov8n.pt"):

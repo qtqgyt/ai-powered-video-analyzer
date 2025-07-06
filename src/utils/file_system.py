@@ -1,7 +1,5 @@
 import os
-import logging
-
-logger = logging.getLogger(__name__)
+from loguru import logger
 
 def ensure_dir_exists(dir_path: str):
     if not os.path.exists(dir_path):

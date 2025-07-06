@@ -33,6 +33,7 @@ ollama~=0.1.8                     # Official Ollama Python client
 # --- Utilities (Optional, depending on your implementation) ---
 # PyYAML==6.0.1                   # If you decide to use YAML for complex configurations
 # python-dotenv==1.0.0            # If you use .env files for managing environment-specific settings
+loguru==0.7.2                     # Modern logging library
 
 # --- Ensure specific versions for reproducibility ---
 # Add any other specific libraries identified during development below.

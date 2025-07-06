@@ -1,6 +1,6 @@
 # src/core/pipeline.py
-import logging
 from typing import Optional
+from loguru import logger
 
 from ai_models.yolo_detector import YOLODetector
 from .video_utils import extract_audio, extract_frames_for_analysis # etc.
@@ -14,8 +14,6 @@ from src.config import settings # For model paths, etc.
 from pathlib import Path
 
 # (Or, model instances can be passed in during __init__)
-
-logger = logging.getLogger(__name__)
 
 class VideoAnalysisPipeline:
     def __init__(self, video_path, transcription_language="en", summarization_model="gemma3",

@@ -1,11 +1,11 @@
 import os
-import logging
 import time
 import socket
 from pathlib import Path
 from urllib.parse import urlparse
 from typing import Optional, List, Dict, Any
 import re
+from loguru import logger
 
 # External Libraries
 import ollama
@@ -13,8 +13,6 @@ from ollama import Client, ResponseError
 
 # Local Imports 
 from src.config import settings
-
-logger = logging.getLogger(__name__)
 
 class OllamaSummarizer:
     def __init__(self, model_name: str = settings.DEFAULT_OLLAMA_MODEL):
