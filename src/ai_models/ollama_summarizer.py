@@ -5,11 +5,11 @@ from pathlib import Path
 from urllib.parse import urlparse
 from typing import Optional, List, Dict, Any
 import re
-from loguru import logger
 
 # External Libraries
 import ollama
 from ollama import Client, ResponseError
+from loguru import logger
 
 # Local Imports 
 from src.config import settings
